@@ -1,0 +1,37 @@
+name: Setup Chrome Remote Desktop on Windows
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  setup-crd:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+        
+
+      - name: Set up Chrome Remote Desktop
+        run: |
+          # Install Chrome
+          powershell -command "Start-Process 'https://dl.google.com/chrome/install/latest/chrome_installer.exe' -Wait"
+          
+          # Download and install Chrome Remote Desktop Host
+          $CRDHostInstallerUrl = "https://dl.google.com/edgedl/chrome-remote-desktop/chromeremotedesktophost.msi"
+          $CRDHostInstallerPath = "C:\Windows\Temp\chromeremotedesktophost.msi"
+          Invoke-WebRequest -Uri $CRDHostInstallerUrl -OutFile $CRDHostInstallerPath
+          Start-Process -FilePath msiexec.exe -ArgumentList "/i", $CRDHostInstallerPath, "/quiet", "/norestart" -Wait
+          
+          # Set up the Chrome Remote Desktop session
+          # Note: Replace 'YOUR_ACCESS_CODE' with the actual access code obtained from the Chrome Remote Desktop web interface
+          $AccessCode = "YOUR_ACCESS_CODE"
+          & "${Env:PROGRAMFILES(X86)}\Google\Chrome Remote Desktop\CurrentVersion\remoting_start_host.exe" --code="4/0AcvDMrBdpp7nHPUmtIzSGgkCUoLCXrQEfMwKleMLt5uQLwLknRsSgBJztTwbHsj5DKFqfw" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name=$Env:COMPUTERNAME
+
+      - name: Start Chrome Remote Desktop
+        run: |
+          # Start the Chrome Remote Desktop service
+          Start-Service chromeremotedesktop
